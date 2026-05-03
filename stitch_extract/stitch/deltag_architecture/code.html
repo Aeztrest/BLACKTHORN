@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#8ff5ff",
+                    "surface-bright": "#1f2b49",
+                    "background": "#060e20",
+                    "surface-container-lowest": "#000000",
+                    "on-error": "#490006",
+                    "surface": "#060e20",
+                    "on-secondary-fixed-variant": "#515c70",
+                    "on-secondary-container": "#c5d1e8",
+                    "tertiary-fixed": "#7bd1fa",
+                    "tertiary-container": "#7bd1fa",
+                    "primary-fixed-dim": "#00deec",
+                    "secondary-fixed": "#d8e3fb",
+                    "outline": "#6d758c",
+                    "primary-container": "#00eefc",
+                    "on-primary-fixed-variant": "#005e64",
+                    "on-surface": "#dee5ff",
+                    "on-tertiary-container": "#00465d",
+                    "on-primary-fixed": "#003f43",
+                    "on-tertiary-fixed-variant": "#004f69",
+                    "on-tertiary-fixed": "#003041",
+                    "secondary-container": "#3c475a",
+                    "secondary": "#d8e3fb",
+                    "on-background": "#dee5ff",
+                    "surface-container-high": "#141f38",
+                    "on-primary": "#005d63",
+                    "on-surface-variant": "#a3aac4",
+                    "tertiary-fixed-dim": "#6cc3eb",
+                    "on-primary-container": "#005359",
+                    "surface-tint": "#8ff5ff",
+                    "inverse-on-surface": "#4d556b",
+                    "error": "#ff716c",
+                    "inverse-surface": "#faf8ff",
+                    "error-container": "#9f0519",
+                    "secondary-dim": "#cad5ed",
+                    "error-dim": "#d7383b",
+                    "surface-variant": "#192540",
+                    "on-tertiary": "#004f69",
+                    "inverse-primary": "#006a71",
+                    "on-secondary-fixed": "#354053",
+                    "on-secondary": "#475266",
+                    "surface-container-highest": "#192540",
+                    "outline-variant": "#40485d",
+                    "tertiary": "#9bddff",
+                    "primary-fixed": "#00eefc",
+                    "tertiary-dim": "#6cc3eb",
+                    "primary-dim": "#00deec",
+                    "surface-container": "#0f1930",
+                    "surface-dim": "#060e20",
+                    "secondary-fixed-dim": "#cad5ed",
+                    "on-error-container": "#ffa8a3",
+                    "surface-container-low": "#091328"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(25, 37, 64, 0.6);
+            backdrop-filter: blur(20px);
+        }
+        .code-block {
+            font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 h-16 bg-[#060e20] shadow-[0_0_15px_rgba(143,245,255,0.05)]">
+<div class="text-2xl font-bold tracking-tighter text-[#00F0FF] font-['Space_Grotesk']">DeltaG</div>
+<div class="hidden md:flex items-center space-x-8 font-['Space_Grotesk'] tracking-tight">
+<a class="text-[#a3aac4] hover:text-[#dee5ff] transition-colors" href="#">Home</a>
+<a class="text-[#8ff5ff] border-b-2 border-[#8ff5ff] pb-1" href="#">Architecture</a>
+<a class="text-[#a3aac4] hover:text-[#dee5ff] transition-colors" href="#">Security Scan</a>
+<a class="text-[#a3aac4] hover:text-[#dee5ff] transition-colors" href="#">Jury Lab</a>
+<a class="text-[#a3aac4] hover:text-[#dee5ff] transition-colors" href="#">Console</a>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-[#00F0FF] text-xs font-bold uppercase tracking-widest bg-surface-container-high px-3 py-1 rounded-full">Health: OK</span>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-[#a3aac4] cursor-pointer hover:text-primary transition-all">settings</span>
+<span class="material-symbols-outlined text-[#a3aac4] cursor-pointer hover:text-primary transition-all">account_circle</span>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 bottom-0 w-64 flex flex-col py-6 bg-[#091328] z-40">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-container-highest rounded-lg flex items-center justify-center border border-outline-variant/10">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+</div>
+<div>
+<div class="text-[10px] uppercase tracking-[0.1em] font-['Space_Grotesk'] text-[#00F0FF] font-bold">Protocol Control</div>
+<div class="text-[8px] uppercase tracking-[0.2em] text-on-surface-variant">Intelligence Tier 4</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col font-['Space_Grotesk'] uppercase text-[10px] tracking-[0.1em]">
+<a class="flex items-center gap-4 px-6 py-4 text-[#a3aac4] hover:bg-[#0f1930] hover:text-[#00F0FF] transition-all" href="#">
+<span class="material-symbols-outlined text-sm">description</span>
+<span>Documentation</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-[#a3aac4] hover:bg-[#0f1930] hover:text-[#00F0FF] transition-all" href="#">
+<span class="material-symbols-outlined text-sm">api</span>
+<span>API Reference</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-[#8ff5ff] font-bold bg-[#192540] rounded-r-full" href="#">
+<span class="material-symbols-outlined text-sm">terminal</span>
+<span>Integration Guide</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-[#a3aac4] hover:bg-[#0f1930] hover:text-[#00F0FF] transition-all" href="#">
+<span class="material-symbols-outlined text-sm">shield_with_heart</span>
+<span>Security Audits</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-[#a3aac4] hover:bg-[#0f1930] hover:text-[#00F0FF] transition-all" href="#">
+<span class="material-symbols-outlined text-sm">science</span>
+<span>Lab Settings</span>
+</a>
+</nav>
+<div class="px-6 mt-auto space-y-4">
+<button class="w-full py-3 bg-primary text-on-primary text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-primary-container transition-all">
+                Enter API Key
+            </button>
+<div class="pt-4 border-t border-outline-variant/15 flex flex-col gap-2">
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">memory</span>
+<span class="text-[9px] uppercase tracking-wider">System Status</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">contact_support</span>
+<span class="text-[9px] uppercase tracking-wider">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-12 min-h-screen">
+<header class="mb-16">
+<h1 class="font-headline text-5xl font-bold tracking-tighter text-on-surface mb-4">Architecture &amp; Workflow</h1>
+<p class="text-on-surface-variant max-w-2xl text-lg">A deep dive into the Sentinel Protocol's request lifecycle, analysis pipelines, and the underlying technological stack securing the Solana blockchain.</p>
+</header>
+<!-- Section 1: Deployment Workflow -->
+<section class="mb-24">
+<div class="flex items-center gap-3 mb-8">
+<span class="w-8 h-[1px] bg-primary"></span>
+<h2 class="font-headline text-2xl font-bold tracking-tight text-primary">Deployment Workflow</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+<!-- Flow Connectors -->
+<div class="hidden md:block absolute top-1/2 left-0 w-full h-[1px] bg-outline-variant/20 -translate-y-1/2 z-0"></div>
+<!-- Node 1 -->
+<div class="relative z-10 bg-surface-container p-6 rounded-xl border border-outline-variant/10 hover:border-primary/30 transition-all group">
+<div class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Entry Point</div>
+<div class="flex flex-col items-center gap-4">
+<span class="material-symbols-outlined text-primary text-4xl">devices</span>
+<span class="font-headline text-lg font-bold">Client</span>
+</div>
+</div>
+<!-- Node 2 -->
+<div class="relative z-10 bg-surface-container p-6 rounded-xl border border-outline-variant/10 hover:border-primary/30 transition-all group">
+<div class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Load Balancing</div>
+<div class="flex flex-col items-center gap-4">
+<span class="material-symbols-outlined text-primary text-4xl">dns</span>
+<span class="font-headline text-lg font-bold">Proxy</span>
+</div>
+</div>
+<!-- Node 3 -->
+<div class="relative z-10 bg-surface-container-high p-6 rounded-xl border border-primary/20 shadow-[0_0_20px_rgba(143,245,255,0.05)]">
+<div class="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-4">Core API</div>
+<div class="flex flex-col items-center gap-4">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-headline text-lg font-bold">Fastify</span>
+</div>
+</div>
+<!-- Node 4 -->
+<div class="relative z-10 bg-surface-container p-6 rounded-xl border border-outline-variant/10 hover:border-primary/30 transition-all group">
+<div class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Chain Interaction</div>
+<div class="flex flex-col items-center gap-4">
+<span class="material-symbols-outlined text-primary text-4xl">hub</span>
+<span class="font-headline text-lg font-bold">Solana RPC</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Request Sequence -->
+<section class="mb-24">
+<div class="flex items-center gap-3 mb-8">
+<span class="w-8 h-[1px] bg-primary"></span>
+<h2 class="font-headline text-2xl font-bold tracking-tight text-primary">Request Sequence</h2>
+</div>
+<div class="bg-surface-container-low rounded-2xl overflow-hidden">
+<div class="grid grid-cols-7 border-b border-outline-variant/10">
+<div class="p-6 text-center border-r border-outline-variant/10 bg-surface-container-highest/20">
+<div class="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Step 01</div>
+<div class="font-headline font-bold text-sm">Rate Limit</div>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10">
+<div class="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Step 02</div>
+<div class="font-headline font-bold text-sm">API Key</div>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10 bg-surface-container-highest/20">
+<div class="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Step 03</div>
+<div class="font-headline font-bold text-sm text-tertiary">x402</div>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10">
+<div class="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Step 04</div>
+<div class="font-headline font-bold text-sm">Analyze</div>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10 bg-surface-container-highest/20">
+<div class="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Step 05</div>
+<div class="font-headline font-bold text-sm">RPC</div>
+</div>
+<div class="p-6 text-center border-r border-outline-variant/10">
+<div class="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Step 06</div>
+<div class="font-headline font-bold text-sm">Policy</div>
+</div>
+<div class="p-6 text-center bg-primary/10">
+<div class="text-[9px] font-bold uppercase tracking-widest text-primary mb-2">Step 07</div>
+<div class="font-headline font-bold text-sm text-primary">Response</div>
+</div>
+</div>
+<div class="p-12 relative min-h-[300px] flex items-center justify-center">
+<!-- Flow Diagram Placeholder -->
+<div class="absolute inset-0 opacity-10 pointer-events-none overflow-hidden" data-alt="Intricate SVG circuit pattern with thin cyan lines connecting glowing geometric nodes representing data pathways">
+<svg class="stroke-primary" height="100%" width="100%">
+<pattern height="100" id="pattern-grid" patternunits="userSpaceOnUse" width="100" x="0" y="0">
+<path d="M 100 0 L 0 0 0 100" fill="none" stroke-width="0.5"></path>
+</pattern>
+<rect fill="url(#pattern-grid)" height="100%" width="100%"></rect>
+</svg>
+</div>
+<div class="relative glass-panel p-8 rounded-2xl border border-primary/20 max-w-lg text-center">
+<span class="material-symbols-outlined text-primary mb-4 block text-4xl">schema</span>
+<h3 class="font-headline text-xl font-bold mb-4">Sequence Diagram Placeholder</h3>
+<p class="text-on-surface-variant text-sm mb-6">Interactive visualization of the linear request sequence from ingress to terminal state response.</p>
+<div class="flex justify-center gap-4">
+<span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+<span class="h-2 w-2 rounded-full bg-primary/60 animate-pulse" style="animation-delay: 0.2s"></span>
+<span class="h-2 w-2 rounded-full bg-primary/30 animate-pulse" style="animation-delay: 0.4s"></span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Analysis Pipeline & Component Dictionary -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-24">
+<!-- Analysis Pipeline (Bento Grid Style) -->
+<div class="lg:col-span-2 space-y-8">
+<div class="flex items-center gap-3">
+<span class="w-8 h-[1px] bg-primary"></span>
+<h2 class="font-headline text-2xl font-bold tracking-tight text-primary">Analysis Pipeline</h2>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container p-6 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">data_object</span>
+<h4 class="font-headline font-bold">TX Decode</h4>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Incoming base64/58 transactions are parsed into instruction sets and account state dependencies.</p>
+</div>
+<div class="bg-surface-container p-6 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">cloud_download</span>
+<h4 class="font-headline font-bold">Pre-Fetch</h4>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Retrieval of latest account data, program metadata, and recent blockhashes from the cluster.</p>
+</div>
+<div class="bg-surface-container-high p-6 rounded-xl border border-primary/10">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">model_training</span>
+<h4 class="font-headline font-bold">Simulate</h4>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Execution within a localized sandbox environment to predict transaction outcomes without state change.</p>
+</div>
+<div class="bg-surface-container p-6 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">straighten</span>
+<h4 class="font-headline font-bold">Normalize</h4>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Mapping disparate instruction patterns into a unified DeltaG internal data structure.</p>
+</div>
+<div class="col-span-2 bg-surface-container-lowest p-8 rounded-xl border-l-2 border-primary">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h4 class="font-headline text-lg font-bold text-primary mb-2">Delta Extraction &amp; Risk</h4>
+<p class="text-sm text-on-surface-variant">Heuristic-based comparison between initial state and simulated post-state.</p>
+</div>
+<span class="material-symbols-outlined text-primary text-3xl">analytics</span>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<div class="p-4 bg-surface-container rounded-lg">
+<div class="text-[10px] text-tertiary font-bold mb-1 uppercase tracking-tighter">Decision Engine</div>
+<div class="text-xs">Final Policy Check</div>
+</div>
+<div class="p-4 bg-surface-container rounded-lg">
+<div class="text-[10px] text-error font-bold mb-1 uppercase tracking-tighter">Risk Score</div>
+<div class="text-xs">Probabilistic Threat</div>
+</div>
+<div class="p-4 bg-surface-container rounded-lg">
+<div class="text-[10px] text-primary font-bold mb-1 uppercase tracking-tighter">Output</div>
+<div class="text-xs">Actionable JSON</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Component Dictionary Table -->
+<div class="space-y-8">
+<div class="flex items-center gap-3">
+<span class="w-8 h-[1px] bg-primary"></span>
+<h2 class="font-headline text-2xl font-bold tracking-tight text-primary">Component Dictionary</h2>
+</div>
+<div class="bg-surface-container p-2 rounded-2xl border border-outline-variant/10">
+<table class="w-full text-left border-collapse">
+<thead class="text-[10px] uppercase tracking-widest text-on-surface-variant border-b border-outline-variant/10">
+<tr>
+<th class="p-4 font-bold">Module</th>
+<th class="p-4 font-bold">Technology</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="p-4 font-bold text-on-surface">Web Server</td>
+<td class="p-4 font-mono text-xs text-primary/80">Fastify</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="p-4 font-bold text-on-surface">Validation</td>
+<td class="p-4 font-mono text-xs text-primary/80">Zod</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="p-4 font-bold text-on-surface">Client SDK</td>
+<td class="p-4 font-mono text-xs text-primary/80">@solana/web3.js</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="p-4 font-bold text-on-surface">Data Layer</td>
+<td class="p-4 font-mono text-xs text-primary/80">Normalization Layer</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="p-4 font-bold text-on-surface">Logic Hub</td>
+<td class="p-4 font-mono text-xs text-primary/80">Risk+Policy Engine</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="p-4 font-bold text-on-surface">Protocol Pay</td>
+<td class="p-4 font-mono text-xs text-primary/80">x402 Facilitator</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="p-4 font-bold text-on-surface">Edge Gateway</td>
+<td class="p-4 font-mono text-xs text-primary/80">Nginx</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="p-4 font-bold text-on-surface">Runtime</td>
+<td class="p-4 font-mono text-xs text-primary/80">Docker</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Limitations Section -->
+<section class="max-w-4xl">
+<div class="flex items-center gap-3 mb-8">
+<span class="w-8 h-[1px] bg-error"></span>
+<h2 class="font-headline text-2xl font-bold tracking-tight text-error">System Limitations</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-6 bg-surface-container-low border-t border-error/20 rounded-xl">
+<h5 class="font-headline font-bold mb-2">Simulate ≠ Execution</h5>
+<p class="text-xs text-on-surface-variant leading-relaxed">Simulations occur in a static snapshot. Competitive block state changes may result in divergent final execution results.</p>
+</div>
+<div class="p-6 bg-surface-container-low border-t border-error/20 rounded-xl">
+<h5 class="font-headline font-bold mb-2">Account Limits</h5>
+<p class="text-xs text-on-surface-variant leading-relaxed">Highly complex transactions exceeding the maximum pre-fetch account limit (currently 64) will be rejected by the analyze pipeline.</p>
+</div>
+<div class="p-6 bg-surface-container-low border-t border-error/20 rounded-xl">
+<h5 class="font-headline font-bold mb-2">x402 Optionality</h5>
+<p class="text-xs text-on-surface-variant leading-relaxed">Wallet flow for x402 is optional. Users may choose direct payment or credit-based models depending on protocol tier.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 px-12 mt-auto border-t border-[#40485d]/15 bg-[#060e20] flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="text-sm font-bold text-[#00F0FF] font-headline">DeltaG Sentinel Protocol</div>
+<div class="font-['Inter'] text-xs text-[#a3aac4] flex gap-8">
+<a class="hover:text-white underline" href="#">Documentation</a>
+<a class="hover:text-white underline" href="#">Website</a>
+<a class="hover:text-white underline" href="#">Security Policy</a>
+<a class="hover:text-white underline" href="#">Github</a>
+</div>
+<div class="font-['Inter'] text-xs text-[#a3aac4]">© 2024 DeltaG Sentinel Protocol. All Rights Reserved.</div>
+</footer>
+</body></html>

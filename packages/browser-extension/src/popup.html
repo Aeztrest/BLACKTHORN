@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeltaG Guard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #222;
+    }
+    .header h1 {
+      font-size: 16px;
+      color: #00d4aa;
+      font-weight: 600;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .status.connected { background: #0a2a1a; color: #00d4aa; }
+    .status.disconnected { background: #2a0a0a; color: #ff4444; }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.green { background: #00d4aa; }
+    .dot.red { background: #ff4444; }
+    label {
+      display: block;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #111;
+      color: #e0e0e0;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #00d4aa;
+    }
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .toggle-row label { margin: 0; }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #00d4aa;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover { background: #00b894; }
+    .footer {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 10px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>DeltaG Guard</h1>
+  </div>
+  <div id="status" class="status disconnected">
+    <span class="dot red" id="statusDot"></span>
+    <span id="statusText">Checking...</span>
+  </div>
+  <label>DeltaG API Endpoint</label>
+  <input type="text" id="endpoint" placeholder="http://localhost:8080">
+  <label>API Key (optional)</label>
+  <input type="password" id="apiKey" placeholder="Your API key">
+  <label>Cluster</label>
+  <select id="cluster">
+    <option value="mainnet-beta">Mainnet Beta</option>
+    <option value="devnet">Devnet</option>
+    <option value="testnet">Testnet</option>
+  </select>
+  <div class="toggle-row">
+    <label>Auto-block risky transactions</label>
+    <input type="checkbox" id="autoBlock" checked style="width:auto;margin:0">
+  </div>
+  <button id="save">Save Settings</button>
+  <div class="footer">DeltaG v0.1.0 — Transaction Security</div>
+  <script src="popup.js"></script>
+</body>
+</html>

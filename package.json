@@ -1,0 +1,22 @@
+{
+  "name": "deltag",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "pnpm --filter @deltag/server build",
+    "build:web": "pnpm --filter @deltag/web build",
+    "build:dashboard": "pnpm --filter dashboard build",
+    "build:testlab": "cd blackthorn_testlab && npm run build",
+    "dev": "pnpm --filter @deltag/server dev",
+    "dev:web": "pnpm --filter @deltag/web dev",
+    "dev:dashboard": "pnpm --filter dashboard dev",
+    "dev:testlab": "cd blackthorn_testlab && npm run dev",
+    "dev:all": "pnpm -r --parallel --filter @deltag/server --filter @deltag/web --filter dashboard dev",
+    "start:testlab": "cd blackthorn_testlab && npm run start",
+    "test": "pnpm --filter @deltag/server test",
+    "lint": "pnpm --filter @deltag/server lint",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  }
+}

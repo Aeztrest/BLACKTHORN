@@ -1,0 +1,21 @@
+{
+  "name": "@deltag/wallet-adapter",
+  "version": "0.1.0",
+  "description": "DeltaG pre-sign transaction analysis SDK for Solana wallets",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^1.90.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@solana/web3.js": "^1.95.0"
+  },
+  "license": "Apache-2.0"
+}
