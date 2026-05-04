@@ -11,6 +11,8 @@
     "dev:web": "pnpm --filter @deltag/web dev",
     "dev:dashboard": "pnpm --filter dashboard dev",
     "dev:testlab": "cd blackthorn_testlab && npm run dev",
+    "dev:showcase": "pnpm --filter @deltag/showcase dev",
+    "build:showcase": "pnpm --filter @deltag/showcase build",
     "dev:all": "pnpm -r --parallel --filter @deltag/server --filter @deltag/web --filter dashboard dev",
     "start:testlab": "cd blackthorn_testlab && npm run start",
     "test": "pnpm --filter @deltag/server test",
