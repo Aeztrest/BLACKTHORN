@@ -4,7 +4,13 @@
       "Bash(git init *)",
       "Bash(git branch *)",
       "Bash(git remote *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(npm run *)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl -s http://localhost:3001)",
+      "Bash(git -C /Users/ahmetbugrakurnaz/Desktop/BLACKTHORN status --short)",
+      "Bash(git -C /Users/ahmetbugrakurnaz/Desktop/BLACKTHORN add blackthron_docs/)",
+      "Bash(git -C /Users/ahmetbugrakurnaz/Desktop/BLACKTHORN diff --cached --stat)"
     ]
   }
 }
