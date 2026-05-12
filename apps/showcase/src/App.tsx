@@ -48,6 +48,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/"          element={<RouteShell><Hub /></RouteShell>} />
+            <Route path="/showcase"  element={<RouteShell><Hub /></RouteShell>} />
             <Route path="/home"      element={<RouteShell><HomePage /></RouteShell>} />
             <Route path="/docs"      element={<RouteShell><DocsPage /></RouteShell>} />
             <Route path="/solswap"   element={<RouteShell><SolSwap /></RouteShell>} />

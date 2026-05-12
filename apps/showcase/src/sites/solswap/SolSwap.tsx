@@ -2,8 +2,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpDown, ChevronDown, Settings, Info } from "lucide-react";
 import { WalletAdapterError } from "@blackthorn/wallet-adapter";
+import type { VersionedTransaction } from "@solana/web3.js";
 import { SiteShell } from "../../components/SiteShell";
 import { ResultOverlay, type ResultState } from "../../blackthorn/ResultOverlay";
+import { RiskPreview } from "../../blackthorn/RiskPreview";
 import { buildScenarioRequest } from "../../blackthorn/transactions";
 import { useWallet } from "../../wallet/context";
 
@@ -35,16 +37,31 @@ export default function SolSwap() {
   const [resultState, setResultState] = useState<ResultState>("idle");
   const [signature, setSignature] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [previewTx, setPreviewTx] = useState<VersionedTransaction | null>(null);
 
   const outputAmount = fromToken.price * parseFloat(amount || "0") / toToken.price;
   const success = signature !== null;
+  const scenarioLabel = dangerous
+    ? `Swap ${amount} ${fromToken.symbol} → ${toToken.symbol} (danger scenario · drainer pattern)`
+    : `Swap ${amount} ${fromToken.symbol} → ${outputAmount.toFixed(4)} ${toToken.symbol}`;
 
   async function handleSwap() {
     if (!connected || !walletAddress) { openWalletModal(); return; }
-    setResultState("awaiting"); setSignature(null); setResultMessage(null);
     try {
       const tx = await buildScenarioRequest(dangerous ? "solswap-danger" : "solswap-safe", walletAddress);
-      const { signature: sig } = await adapter.signAndSendTransaction(tx);
+      setPreviewTx(tx);   // opens RiskPreview — user decides how to send
+    } catch (e) {
+      setResultState("error");
+      setResultMessage(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function sendViaBlackthorn() {
+    if (!previewTx) return;
+    setPreviewTx(null);
+    setResultState("awaiting"); setSignature(null); setResultMessage(null);
+    try {
+      const { signature: sig } = await adapter.signAndSendTransaction(previewTx);
       setSignature(sig); setResultState("confirmed");
     } catch (e) {
       if (e instanceof WalletAdapterError && (e.code === "SIGN_REJECTED" || e.code === "POPUP_CLOSED")) {
@@ -53,6 +70,13 @@ export default function SolSwap() {
         setResultState("error"); setResultMessage(e instanceof Error ? e.message : String(e));
       }
     }
+  }
+  // "Without protection" = same path through the connected wallet, but no
+  // pre-sign review on the site side. Demo aid only — the wallet still
+  // applies its own policy, since BLACKTHORN is the wallet itself. To truly
+  // bypass, swap to a different non-BLACKTHORN wallet from the picker.
+  async function sendRaw() {
+    return sendViaBlackthorn();
   }
 
   function flip() {
@@ -203,6 +227,16 @@ export default function SolSwap() {
           {dangerous && <span className="text-xs text-red-400 font-medium">⚠ Danger mode</span>}
         </motion.div>
       </div>
+
+      <RiskPreview
+        open={previewTx !== null}
+        tx={previewTx}
+        userWallet={walletAddress?.toBase58() ?? null}
+        scenarioLabel={scenarioLabel}
+        onClose={() => setPreviewTx(null)}
+        onProceedWithBlackthorn={sendViaBlackthorn}
+        onProceedRaw={sendRaw}
+      />
     </SiteShell>
   );
 }

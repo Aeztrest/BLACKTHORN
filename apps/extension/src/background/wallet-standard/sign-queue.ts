@@ -6,7 +6,7 @@
  * Spec: docs/extension-architecture.md §3.
  */
 
-export type SignKind = "message" | "transaction" | "transactionAndSend";
+export type SignKind = "message" | "transaction" | "transactionAndSend" | "connect";
 
 export interface SignRequest {
   requestId: string;
@@ -32,7 +32,8 @@ export interface SignRequest {
 export type SignSuccess =
   | { kind: "transaction"; signedTxBase64: string }
   | { kind: "transactionAndSend"; signedTxBase64: string; signature: string }
-  | { kind: "message"; signatureBase64: string };
+  | { kind: "message"; signatureBase64: string }
+  | { kind: "connect"; rememberOrigin: boolean };
 
 const queue = new Map<string, SignRequest>();
 

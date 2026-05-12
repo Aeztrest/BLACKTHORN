@@ -54,11 +54,12 @@ export default defineManifest(({ mode }) => {
 
     web_accessible_resources: [
       {
-        // Stable filename emitted by vite.config rollupOptions for the inpage
-        // entry. The content script injects this as a <script type="module">
-        // so it runs in the page's MAIN world and registers BLACKTHORN with
-        // Wallet Standard.
-        resources: ["inpage.js"],
+        // `inpage.js` is the stable entry the content script injects; the
+        // wildcard covers every code-split chunk it imports (rollup splits
+        // shared deps like @solana/web3.js into separate hashed files). Without
+        // the wildcard, the browser denies the chunk fetch and inpage silently
+        // fails to register the wallet.
+        resources: ["inpage.js", "assets/*"],
         matches: ["<all_urls>"],
       },
     ],

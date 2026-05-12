@@ -2,9 +2,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, Lock, Zap, Info } from "lucide-react";
 import { WalletAdapterError } from "@blackthorn/wallet-adapter";
+import type { VersionedTransaction } from "@solana/web3.js";
 import { useWallet } from "../../wallet/context";
 import { SiteShell } from "../../components/SiteShell";
 import { ResultOverlay, type ResultState } from "../../blackthorn/ResultOverlay";
+import { RiskPreview } from "../../blackthorn/RiskPreview";
 import { buildScenarioRequest } from "../../blackthorn/transactions";
 
 const THEME = {
@@ -33,14 +35,30 @@ export default function SolYield() {
   const [resultState, setResultState] = useState<ResultState>("idle");
   const [signature, setSignature] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [previewTx, setPreviewTx] = useState<VersionedTransaction | null>(null);
   const success = signature !== null;
+  const pool = POOLS[selectedPool];
+  const scenarioLabel = dangerous
+    ? `Stake ${amount} SOL in an unverified pool (warn scenario)`
+    : `Stake ${amount} SOL in ${pool?.name ?? "?"}`;
 
   async function handleStake() {
     if (!connected || !walletAddress) { openWalletModal(); return; }
-    setResultState("awaiting"); setSignature(null); setResultMessage(null);
     try {
       const tx = await buildScenarioRequest(dangerous ? "solyield-warn" : "solyield-safe", walletAddress);
-      const { signature: sig } = await adapter.signAndSendTransaction(tx);
+      setPreviewTx(tx);
+    } catch (e) {
+      setResultState("error");
+      setResultMessage(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function sendViaBlackthorn() {
+    if (!previewTx) return;
+    setPreviewTx(null);
+    setResultState("awaiting"); setSignature(null); setResultMessage(null);
+    try {
+      const { signature: sig } = await adapter.signAndSendTransaction(previewTx);
       setSignature(sig); setResultState("confirmed");
     } catch (e) {
       if (e instanceof WalletAdapterError && (e.code === "SIGN_REJECTED" || e.code === "POPUP_CLOSED")) {
@@ -50,8 +68,7 @@ export default function SolYield() {
       }
     }
   }
-
-  const pool = POOLS[selectedPool];
+  const sendRaw = sendViaBlackthorn;
   const estimatedYearly = parseFloat(amount || "0") * (parseFloat(pool.apy) / 100);
 
   return (
@@ -195,6 +212,16 @@ export default function SolYield() {
           </div>
         </div>
       </div>
+
+      <RiskPreview
+        open={previewTx !== null}
+        tx={previewTx}
+        userWallet={walletAddress?.toBase58() ?? null}
+        scenarioLabel={scenarioLabel}
+        onClose={() => setPreviewTx(null)}
+        onProceedWithBlackthorn={sendViaBlackthorn}
+        onProceedRaw={sendRaw}
+      />
     </SiteShell>
   );
 }

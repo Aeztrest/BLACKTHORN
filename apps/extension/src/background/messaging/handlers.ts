@@ -361,14 +361,18 @@ const txAnalyzeRequestHandler: Handler<"tx.analyzeRequest"> = async ({ requestId
   if (!req) throw new Error("Sign request not found — it may already have been processed.");
   const snap = getSnapshot();
   if (!snap.authorityAddress) throw new Error("Wallet not initialized.");
-  // Messages don't need on-chain simulation — return an "info" advisory.
-  if (req.kind === "message") {
+  // Messages + connect approvals don't need on-chain simulation — return
+  // an "info" advisory the popup can render alongside the verdict.
+  if (req.kind === "message" || req.kind === "connect") {
+    const note = req.kind === "connect"
+      ? "Site is requesting connection. No funds move until you approve a signature."
+      : "Plain message — no funds move on-chain.";
     return {
       decision: "advisory" as const,
       safe: true,
       blockingReasons: [],
-      advisoryReasons: ["Plain message — no funds move on-chain."],
-      reasons: ["Plain message — no funds move on-chain."],
+      advisoryReasons: [note],
+      reasons: [note],
       riskFindings: [],
       estimatedChanges: { sol: [], tokens: [], approvals: [], delegates: [] },
       simulationWarnings: [],
@@ -392,9 +396,23 @@ async function loadPolicy(): Promise<GuardPolicy | null> {
   return (all[POLICY_STORAGE_KEY] as GuardPolicy | undefined) ?? null;
 }
 
-const txSignHandler: Handler<"tx.sign"> = async ({ requestId, accept }) => {
+const txSignHandler: Handler<"tx.sign"> = async ({ requestId, accept, remember }) => {
   const req = takeSign(requestId);
   if (!req) throw new Error("Unknown sign request — it may have already been processed.");
+
+  // Connect-approval is a special kind: no transaction to sign, just the
+  // user's verdict on whether this origin can connect.
+  if (req.kind === "connect") {
+    if (!accept) {
+      req.reject(new Error("User rejected the connection."));
+      if (signQueueSize() === 0) dispatch({ type: "sign.end" });
+      return { rejection: "User declined" };
+    }
+    req.resolve({ kind: "connect", rememberOrigin: remember === true });
+    if (signQueueSize() === 0) dispatch({ type: "sign.end" });
+    return { ok: true };
+  }
+
   if (!accept) {
     req.reject(new Error("User declined the signature."));
     if (signQueueSize() === 0) dispatch({ type: "sign.end" });
@@ -427,7 +445,9 @@ const txSignHandler: Handler<"tx.sign"> = async ({ requestId, accept }) => {
     });
     if (result.kind === "transactionAndSend") return { signed: result.signedTxBase64, signature: result.signature };
     if (result.kind === "transaction")        return { signed: result.signedTxBase64 };
-    return { signature: result.signatureBase64 };
+    if (result.kind === "message")            return { signature: result.signatureBase64 };
+    // connect is handled earlier; treat any other kind defensively
+    return { ok: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     req.reject(new Error(message));
@@ -446,7 +466,8 @@ const txSignHandler: Handler<"tx.sign"> = async ({ requestId, accept }) => {
   }
 };
 
-function kindLabel(kind: "message" | "transaction" | "transactionAndSend"): string {
+function kindLabel(kind: "message" | "transaction" | "transactionAndSend" | "connect"): string {
+  if (kind === "connect") return "connect";
   if (kind === "message") return "message";
   if (kind === "transactionAndSend") return "+broadcast tx";
   return "transaction";

@@ -4,9 +4,9 @@
  * Spec: docs/wallet-spec.md §3.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { useWalletContext } from "../shared/state-context";
+import { useRpc, useWalletContext } from "../shared/state-context";
 import { LockedScreen } from "./LockedScreen";
 import { UninitializedScreen } from "./UninitializedScreen";
 import { TopStrip } from "./TopStrip";
@@ -16,10 +16,31 @@ import { Activity } from "./Activity";
 import { Allowances } from "./Allowances";
 import { Settings } from "./Settings";
 import { SignRequest } from "./SignRequest";
+import { ConnectApproval } from "./ConnectApproval";
 
 export function PopupApp() {
   const { state, loading, error } = useWalletContext();
+  const rpc = useRpc();
   const [tab, setTab] = useState<PopupTab>("home");
+  const [pendingKind, setPendingKind] = useState<string | null>(null);
+
+  // When phase=signing, the head of the queue may be a transaction OR a
+  // connect-approval. Poll the queue head so the popup routes to the right
+  // screen — SignRequest for txs/messages, ConnectApproval for connect.
+  useEffect(() => {
+    if (state?.phase !== "signing") { setPendingKind(null); return; }
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const r = await rpc.call("tx.peekRequest", undefined as never);
+        if (cancelled) return;
+        setPendingKind(r?.kind ?? null);
+      } catch { /* ignore */ }
+    };
+    void tick();
+    const t = setInterval(tick, 600);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [state?.phase, rpc]);
 
   if (loading) {
     return (
@@ -41,7 +62,10 @@ export function PopupApp() {
 
   if (!state || state.phase === "uninitialized") return <UninitializedScreen />;
   if (state.phase === "locked") return <LockedScreen />;
-  if (state.phase === "signing") return <SignRequest />;
+  if (state.phase === "signing") {
+    if (pendingKind === "connect") return <ConnectApproval />;
+    return <SignRequest />;
+  }
 
   return (
     <div className="h-full flex flex-col">

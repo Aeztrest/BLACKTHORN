@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @blackthorn/wallet-adapter build && pnpm --filter @blackthorn/extension build && pnpm --filter @deltag/showcase build",
+  "outputDirectory": "apps/showcase/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

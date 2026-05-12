@@ -1,5 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck, Zap, Loader2, Download, ChevronRight } from "lucide-react";
+import { X, ShieldCheck, Zap, Loader2, Download, ChevronRight, RotateCw, AlertCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { getWallets } from "@wallet-standard/app";
 import type { Wallet } from "@wallet-standard/base";
 
 interface Props {
@@ -12,7 +14,26 @@ interface Props {
 
 const BLACKTHORN_NAME = "BLACKTHORN";
 
-export function WalletModal({ open, onClose, onConnect, connecting, available }: Props) {
+export function WalletModal({ open, onClose, onConnect, connecting, available: initialAvailable }: Props) {
+  // Live mirror of the registered wallet list so the "Rescan" button can
+  // re-poll without waiting for a register event from the provider.
+  const [available, setAvailable] = useState<Wallet[]>(initialAvailable);
+  const [rescanning, setRescanning] = useState(false);
+
+  useEffect(() => { setAvailable(initialAvailable); }, [initialAvailable]);
+
+  const rescan = useCallback(() => {
+    setRescanning(true);
+    try {
+      const list = getWallets().get().filter((w) =>
+        w.chains.some((c) => c.startsWith("solana:")) &&
+        !!w.features["solana:signAndSendTransaction"],
+      );
+      setAvailable([...list]);
+    } catch { /* ignore */ }
+    setTimeout(() => setRescanning(false), 350);
+  }, []);
+
   const blackthorn = available.find((w) => w.name === BLACKTHORN_NAME);
   const others = available.filter((w) => w.name !== BLACKTHORN_NAME);
 
@@ -36,9 +57,19 @@ export function WalletModal({ open, onClose, onConnect, connecting, available }:
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
               <h2 className="font-semibold text-sm text-white">Connect Wallet</h2>
-              <button onClick={onClose} className="text-white/30 hover:text-white/70">
-                <X size={16} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={rescan}
+                  disabled={rescanning}
+                  title="Re-scan for registered wallets"
+                  className="text-white/30 hover:text-white/80 transition-colors p-0.5"
+                >
+                  <RotateCw size={14} className={rescanning ? "animate-spin" : ""} />
+                </button>
+                <button onClick={onClose} className="text-white/30 hover:text-white/70">
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="p-4 space-y-3">
@@ -63,29 +94,13 @@ export function WalletModal({ open, onClose, onConnect, connecting, available }:
                     : <Zap size={11} className="text-accent-soft" />}
                 </button>
               ) : (
-                <a
-                  href="/install"
-                  className="block w-full p-4 rounded-xl transition-all hover:bg-white/[0.06]"
-                  style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.35)" }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: "linear-gradient(135deg,#6366f1,#4f46e5)" }}>
-                      <Download size={14} className="text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-white">Install BLACKTHORN</p>
-                      <p className="text-xs text-white/55 mt-0.5">One-click download · works in Chrome, Brave, Edge, Firefox</p>
-                    </div>
-                    <ChevronRight size={12} className="text-white/40" />
-                  </div>
-                </a>
+                <BlackthornMissing othersCount={others.length} />
               )}
 
               {others.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold px-1 mb-1.5">
-                    Other wallets
+                    {blackthorn ? "Other wallets" : "Wallets we did detect"}
                   </p>
                   {others.map((w) => (
                     <button
@@ -113,6 +128,71 @@ export function WalletModal({ open, onClose, onConnect, connecting, available }:
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+/**
+ * Shown when BLACKTHORN isn't in the registered wallet list. We don't just
+ * dump the user at the install page — if other Solana wallets ARE registered,
+ * BLACKTHORN is almost certainly installed but the inpage script didn't run
+ * (extension cache, page loaded before content script). Surface that
+ * specifically so the user knows to reload the extension, not reinstall.
+ */
+function BlackthornMissing({ othersCount }: { othersCount: number }) {
+  // If at least one Solana wallet registered (Phantom, Solflare, etc.) but
+  // BLACKTHORN didn't, the page's Wallet Standard pipeline works — BLACKTHORN
+  // itself failed to register on this page. Most often: extension needs to be
+  // remove+reloaded after a fresh build.
+  const likelyInstalled = othersCount > 0;
+
+  return (
+    <div className="space-y-2">
+      <div className="rounded-xl p-4"
+           style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.35)" }}>
+        <div className="flex items-center gap-2 mb-2">
+          <ShieldCheck size={14} className="text-indigo-300" />
+          <p className="text-sm font-bold text-white">BLACKTHORN not detected</p>
+        </div>
+        {likelyInstalled ? (
+          <div className="space-y-2.5 text-xs text-white/65 leading-relaxed">
+            <p>
+              We see other Solana wallets but not BLACKTHORN. The extension is probably installed
+              but didn't register itself on this page.
+            </p>
+            <div className="rounded-lg p-2.5 space-y-1"
+                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <p className="text-white/85 font-semibold text-[11px]">Quick fix:</p>
+              <ol className="text-[11px] text-white/65 space-y-0.5 list-decimal list-inside">
+                <li>Open the extensions page (<span className="font-mono">about:debugging</span> or <span className="font-mono">chrome://extensions</span>)</li>
+                <li>Remove the old BLACKTHORN entry</li>
+                <li>Load the latest build (<span className="font-mono">apps/extension/dist</span> or download below)</li>
+                <li>Hit the ↻ refresh button at the top of this modal</li>
+              </ol>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <a href="/install" className="btn-primary !text-xs !py-2 flex-1 flex items-center justify-center gap-1.5">
+                <Download size={11} /> Download latest
+              </a>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-3 py-2 rounded-lg text-xs flex items-center gap-1.5"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}
+              >
+                <AlertCircle size={11} /> Reload page
+              </button>
+            </div>
+          </div>
+        ) : (
+          <a href="/install" className="block mt-2">
+            <div className="flex items-center gap-2 text-xs text-white/65">
+              <Download size={12} />
+              <span>Get one-click install · works in Chrome, Brave, Edge, Firefox</span>
+              <ChevronRight size={12} className="ml-auto text-white/40" />
+            </div>
+          </a>
+        )}
+      </div>
+    </div>
   );
 }
 

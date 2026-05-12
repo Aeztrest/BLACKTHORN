@@ -17,6 +17,7 @@ import { isUnlocked, useAuthority } from "../crypto/session";
 import { getConnection } from "../rpc/connection";
 import { enqueue, newRequestId, type SignKind, type SignSuccess } from "./sign-queue";
 import { appendHistory, listHistory } from "../db/history";
+import { readSitePermission, writeSitePermission } from "../db/site-permissions";
 
 export interface WsConnectReq { origin: string }
 export interface WsDisconnectReq { origin: string }
@@ -39,6 +40,27 @@ export const wsConnect: WsHandler = async (raw) => {
   }
   if (!s.walletAddress || !s.authorityAddress) {
     throw new Error("Wallet not ready.");
+  }
+
+  // Per-origin trust check (Phantom-style). Trusted = silent resolve,
+  // Denied = throw, Unknown = popup the user for an explicit decision.
+  const perm = await readSitePermission(origin);
+  if (perm?.status === "denied" && perm.remembered) {
+    throw new Error(`Connection to ${origin} was previously denied.`);
+  }
+  if (!(perm?.status === "trusted" && perm.remembered)) {
+    // Queue an approval request; wait for user decision via popup.
+    const approval = await queueConnectApproval(origin);
+    if (!approval.allow) {
+      // Persist the denial only if the user ticked "remember".
+      if (approval.remember) {
+        await writeSitePermission({ origin, status: "denied", remembered: true, grantedAt: Date.now() });
+      }
+      throw new Error("User rejected the connection.");
+    }
+    if (approval.remember) {
+      await writeSitePermission({ origin, status: "trusted", remembered: true, grantedAt: Date.now() });
+    }
   }
 
   // Record the first connection per origin in history so the Options' Sites
@@ -68,6 +90,31 @@ export const wsConnect: WsHandler = async (raw) => {
     authorityAddress: s.authorityAddress,
   };
 };
+
+/**
+ * Enqueue a connect-approval request and resolve with the user's decision.
+ * The popup picks this up via `tx.peekRequest`, the user clicks Allow/Deny,
+ * and the background routes the verdict back through the existing sign-queue
+ * resolution machinery.
+ */
+function queueConnectApproval(origin: string): Promise<{ allow: boolean; remember: boolean }> {
+  return new Promise((resolve) => {
+    const requestId = newRequestId();
+    enqueue({
+      requestId,
+      kind: "connect",
+      origin,
+      payloadBase64: "",
+      label: `Connect ${origin}`,
+      resolve: (out) => {
+        if (out.kind !== "connect") return resolve({ allow: false, remember: false });
+        resolve({ allow: true, remember: out.rememberOrigin });
+      },
+      reject: () => resolve({ allow: false, remember: false }),
+    });
+    dispatch({ type: "sign.start" });
+  });
+}
 
 export const wsDisconnect: WsHandler = async (_raw) => {
   // Disconnect is a per-origin courtesy on the dApp side; we don't track

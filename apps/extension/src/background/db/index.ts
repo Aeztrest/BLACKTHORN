@@ -9,10 +9,11 @@
 
 const DB_NAME = "blackthorn";
 // v2 adds the `sub_keys` object store (T28 merchant Swig sub-keys).
+// v3 adds the `site_permissions` object store (per-origin connect trust grants).
 // All upgrades MUST live in `runMigrations` below — no other module may call
 // indexedDB.open() with a higher version, or it deadlocks the connection
 // cached in `dbPromise` and the popup gets "close other tabs" / timeout.
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -66,11 +67,17 @@ function runMigrations(db: IDBDatabase, oldVersion: number) {
       sk.createIndex("status", "status", { unique: false });
     }
   }
+  if (oldVersion < 3) {
+    // site_permissions: per-origin connect-trust grants. One row per origin.
+    if (!db.objectStoreNames.contains("site_permissions")) {
+      db.createObjectStore("site_permissions", { keyPath: "origin" });
+    }
+  }
 }
 
 /* ────────────── Generic helpers ────────────── */
 
-export type StoreName = "keystore" | "allowances" | "history" | "alerts" | "monitor" | "prefs";
+export type StoreName = "keystore" | "allowances" | "history" | "alerts" | "monitor" | "prefs" | "sub_keys" | "site_permissions";
 
 export async function tx<T>(
   stores: StoreName | StoreName[],

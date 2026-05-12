@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { WalletAdapterError } from "@blackthorn/wallet-adapter";
+import type { VersionedTransaction } from "@solana/web3.js";
 import { useWallet } from "../../wallet/context";
 import { SiteShell } from "../../components/SiteShell";
 import { ResultOverlay, type ResultState } from "../../blackthorn/ResultOverlay";
+import { RiskPreview } from "../../blackthorn/RiskPreview";
 import { buildScenarioRequest } from "../../blackthorn/transactions";
 
 const THEME = {
@@ -34,14 +36,29 @@ export default function PixelDrop() {
   const [resultState, setResultState] = useState<ResultState>("idle");
   const [signature, setSignature] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const [previewTx, setPreviewTx] = useState<VersionedTransaction | null>(null);
   const success = signature !== null;
+  const scenarioLabel = dangerous
+    ? `Mint ${qty} Cyber Phantom NFT(s) (danger scenario · drainer pattern)`
+    : `Mint ${qty} Cyber Phantom NFT(s) for ${(qty * 0.1).toFixed(2)} SOL`;
 
   async function handleMint() {
     if (!connected || !walletAddress) { openWalletModal(); return; }
-    setResultState("awaiting"); setSignature(null); setResultMessage(null);
     try {
       const tx = await buildScenarioRequest(dangerous ? "pixeldrop-danger" : "pixeldrop-safe", walletAddress);
-      const { signature: sig } = await adapter.signAndSendTransaction(tx);
+      setPreviewTx(tx);
+    } catch (e) {
+      setResultState("error");
+      setResultMessage(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function sendViaBlackthorn() {
+    if (!previewTx) return;
+    setPreviewTx(null);
+    setResultState("awaiting"); setSignature(null); setResultMessage(null);
+    try {
+      const { signature: sig } = await adapter.signAndSendTransaction(previewTx);
       setSignature(sig); setResultState("confirmed");
     } catch (e) {
       if (e instanceof WalletAdapterError && (e.code === "SIGN_REJECTED" || e.code === "POPUP_CLOSED")) {
@@ -51,6 +68,7 @@ export default function PixelDrop() {
       }
     }
   }
+  const sendRaw = sendViaBlackthorn;
 
   const pct = (NFT_COLLECTION.minted / NFT_COLLECTION.supply) * 100;
 
@@ -190,6 +208,16 @@ export default function PixelDrop() {
           </div>
         </motion.div>
       </div>
+
+      <RiskPreview
+        open={previewTx !== null}
+        tx={previewTx}
+        userWallet={walletAddress?.toBase58() ?? null}
+        scenarioLabel={scenarioLabel}
+        onClose={() => setPreviewTx(null)}
+        onProceedWithBlackthorn={sendViaBlackthorn}
+        onProceedRaw={sendRaw}
+      />
     </SiteShell>
   );
 }
