@@ -1,30 +1,29 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap } from "lucide-react";
+import { X, ShieldCheck, Zap, Loader2, Download, ChevronRight } from "lucide-react";
+import type { Wallet } from "@wallet-standard/base";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConnect: (wallet: Wallet) => void;
+  connecting: boolean;
+  available: Wallet[];
 }
 
-const WALLETS = [
-  { id: "swig", name: "Swig Wallet", tag: "Smart Wallet", active: true, color: "#6366f1" },
-  { id: "phantom", name: "Phantom", tag: "Extension", active: false, color: "#ab9ff2" },
-  { id: "solflare", name: "Solflare", tag: "Extension", active: false, color: "#fc7227" },
-  { id: "backpack", name: "Backpack", tag: "Extension", active: false, color: "#e33e3e" },
-];
+const BLACKTHORN_NAME = "BLACKTHORN";
 
-export function WalletModal({ open, onClose, onConfirm }: Props) {
+export function WalletModal({ open, onClose, onConnect, connecting, available }: Props) {
+  const blackthorn = available.find((w) => w.name === BLACKTHORN_NAME);
+  const others = available.filter((w) => w.name !== BLACKTHORN_NAME);
+
   return (
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={onClose}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.78)", backdropFilter: "blur(8px)" }}
         >
           <motion.div
             initial={{ scale: 0.92, opacity: 0, y: 12 }}
@@ -37,57 +36,104 @@ export function WalletModal({ open, onClose, onConfirm }: Props) {
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
               <h2 className="font-semibold text-sm text-white">Connect Wallet</h2>
-              <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors">
+              <button onClick={onClose} className="text-white/30 hover:text-white/70">
                 <X size={16} />
               </button>
             </div>
 
-            <div className="p-3 space-y-2">
-              {WALLETS.map((w) => (
+            <div className="p-4 space-y-3">
+              {blackthorn ? (
                 <button
-                  key={w.id}
-                  disabled={!w.active}
-                  onClick={w.active ? onConfirm : undefined}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl transition-all ${
-                    w.active
-                      ? "hover:bg-white/5 cursor-pointer"
-                      : "opacity-35 cursor-not-allowed"
-                  }`}
-                  style={w.active ? { border: `1px solid rgba(99,102,241,0.3)`, background: "rgba(99,102,241,0.06)" } : { border: "1px solid rgba(255,255,255,0.05)" }}
+                  onClick={() => onConnect(blackthorn)}
+                  disabled={connecting}
+                  className="w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all hover:bg-white/5 disabled:opacity-60"
+                  style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.35)" }}
+                >
+                  <WalletIcon wallet={blackthorn} fallback={<ShieldCheck size={16} className="text-white" />} variant="primary" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-bold text-white">BLACKTHORN Wallet</p>
+                      <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded font-bold"
+                        style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>Recommended</span>
+                    </div>
+                    <p className="text-xs text-white/50 mt-0.5">Pre-flight simulation + live monitoring</p>
+                  </div>
+                  {connecting
+                    ? <Loader2 size={11} className="animate-spin text-accent-soft" />
+                    : <Zap size={11} className="text-accent-soft" />}
+                </button>
+              ) : (
+                <a
+                  href="/install"
+                  className="block w-full p-4 rounded-xl transition-all hover:bg-white/[0.06]"
+                  style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.35)" }}
                 >
                   <div className="flex items-center gap-3">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold"
-                      style={{ background: w.active ? `${w.color}22` : "rgba(255,255,255,0.06)", color: w.color }}
-                    >
-                      {w.name[0]}
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: "linear-gradient(135deg,#6366f1,#4f46e5)" }}>
+                      <Download size={14} className="text-white" />
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-white">{w.name}</p>
-                      <p className="text-xs text-white/35">{w.tag}</p>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-white">Install BLACKTHORN</p>
+                      <p className="text-xs text-white/55 mt-0.5">One-click download · works in Chrome, Brave, Edge, Firefox</p>
                     </div>
+                    <ChevronRight size={12} className="text-white/40" />
                   </div>
-                  {w.active && (
-                    <div className="flex items-center gap-1.5">
-                      <Zap size={11} style={{ color: w.color }} />
-                      <span className="text-xs font-semibold" style={{ color: w.color }}>
-                        Connect
-                      </span>
-                    </div>
-                  )}
-                </button>
-              ))}
+                </a>
+              )}
+
+              {others.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold px-1 mb-1.5">
+                    Other wallets
+                  </p>
+                  {others.map((w) => (
+                    <button
+                      key={w.name}
+                      onClick={() => onConnect(w)}
+                      disabled={connecting}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all hover:bg-white/5"
+                      style={{ border: "1px solid rgba(255,255,255,0.05)" }}
+                    >
+                      <WalletIcon wallet={w} fallback={<span className="text-sm font-bold">{w.name[0]}</span>} />
+                      <p className="text-sm text-white flex-1">{w.name}</p>
+                      <span className="text-[10px] text-white/30">No BLACKTHORN protection</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="px-5 pb-5">
-              <p className="text-xs text-white/25 text-center leading-relaxed">
-                Swig is a smart wallet — no extension needed.{" "}
-                <span className="text-white/40">Session-based authorization.</span>
+            <div className="px-5 pb-5 space-y-2">
+              <p className="text-xs text-white/45 leading-relaxed">
+                BLACKTHORN sits between this site and your signature. Every transaction is simulated and policy-checked at the wallet level — not on this page.
               </p>
             </div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function WalletIcon({ wallet, fallback, variant }: {
+  wallet: Wallet;
+  fallback: React.ReactNode;
+  variant?: "primary";
+}) {
+  const size = variant === "primary" ? 40 : 32;
+  const radius = variant === "primary" ? 12 : 8;
+  return (
+    <div
+      className="flex items-center justify-center shrink-0 overflow-hidden"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        background: variant === "primary" ? "linear-gradient(135deg,#6366f1,#4f46e5)" : "rgba(255,255,255,0.05)",
+      }}
+    >
+      {wallet.icon ? <img src={wallet.icon} alt="" className="w-full h-full object-contain" /> : fallback}
+    </div>
   );
 }

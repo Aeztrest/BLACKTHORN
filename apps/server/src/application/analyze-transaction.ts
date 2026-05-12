@@ -126,6 +126,8 @@ export async function analyzeTransaction(
     truncatedAccounts,
     userWallet: userWalletPk,
     cpiTrace,
+    tx,
+    paymentRequirements: body.paymentRequirements,
   });
 
   const simWarnings = simulationWarningsFromLogs(simulation.logs);

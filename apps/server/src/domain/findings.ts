@@ -24,7 +24,16 @@ export type RiskFindingCode =
   // Pattern-based findings
   | "UNLIMITED_APPROVAL"
   | "AUTHORITY_CHANGE_DETECTED"
-  | "EXCESSIVE_COMPUTE_USAGE";
+  | "EXCESSIVE_COMPUTE_USAGE"
+  // x402 protocol-specific findings (T31)
+  | "X402_SHAPE_INVALID"
+  | "X402_FEEPAYER_IN_ACCOUNTS"
+  | "X402_MEMO_MISSING"
+  | "X402_DESTINATION_MISMATCH"
+  | "X402_MINT_MISMATCH"
+  | "X402_AMOUNT_MISMATCH"
+  | "X402_CU_PRICE_EXCESS"
+  | "X402_NON_CANONICAL_MINT";
 
 export type RiskFinding = {
   code: RiskFindingCode;

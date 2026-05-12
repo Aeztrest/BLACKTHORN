@@ -1,22 +1,26 @@
 {
-  "name": "deltag",
+  "name": "blackthorn",
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "build": "pnpm --filter @deltag/server build",
-    "build:web": "pnpm --filter @deltag/web build",
-    "build:dashboard": "pnpm --filter dashboard build",
-    "build:testlab": "cd blackthorn_testlab && npm run build",
-    "dev": "pnpm --filter @deltag/server dev",
-    "dev:web": "pnpm --filter @deltag/web dev",
-    "dev:dashboard": "pnpm --filter dashboard dev",
-    "dev:testlab": "cd blackthorn_testlab && npm run dev",
-    "dev:showcase": "pnpm --filter @deltag/showcase dev",
+    "build:server": "pnpm --filter @deltag/server build",
+    "build:wallet": "pnpm --filter @blackthorn/wallet build",
+    "build:extension": "pnpm --filter @blackthorn/extension build",
     "build:showcase": "pnpm --filter @deltag/showcase build",
-    "dev:all": "pnpm -r --parallel --filter @deltag/server --filter @deltag/web --filter dashboard dev",
-    "start:testlab": "cd blackthorn_testlab && npm run start",
+    "build:guard": "pnpm --filter @blackthorn/swig-guard build",
+
+    "dev": "pnpm --filter @deltag/server dev",
+    "dev:server": "pnpm --filter @deltag/server dev",
+    "dev:wallet": "pnpm --filter @blackthorn/wallet dev",
+    "dev:extension": "pnpm --filter @blackthorn/extension dev",
+    "dev:showcase": "pnpm --filter @deltag/showcase dev",
+    "dev:all": "pnpm -r --parallel --filter @deltag/server --filter @blackthorn/wallet --filter @deltag/showcase dev",
+
+    "typecheck": "pnpm -r --parallel typecheck",
     "test": "pnpm --filter @deltag/server test",
     "lint": "pnpm --filter @deltag/server lint",
+
     "docker:up": "docker compose up --build -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f"

@@ -1,140 +1,152 @@
 # BLACKTHORN
 
-Solana işlemlerini zincire göndermeden önce simüle eden, analiz eden ve politika tabanlı **güvenli / riskli** kararı üreten güvenlik altyapısı.
+> The Solana smart wallet that simulates every signature before your keys touch it — and watches what happens after.
+
+A browser-extension wallet built on the [Swig](https://onswig.com) protocol
+with a transaction firewall in the signing path. Pre-sign simulation,
+per-site policies, on-chain sub-key revoke, and the first wallet-level
+defense for the **x402** HTTP-402 payment protocol.
 
 ---
 
-## Ne yapar?
+## What's in the box
 
-Kullanıcı bir işlemi imzalamadan önce BLACKTHORN devreye girer:
-
-1. İşlemi RPC üzerinde simüle eder — gerçek sonuçları önceden görür
-2. Risk dedektörlerini çalıştırır: fund drain, wallet drainer, CPI derinliği, program reputation, token approval
-3. DSL tabanlı policy motorundan `safe: boolean` + `reasons` döner
-4. Sonuç kullanıcıya gösterilir; tehlikeli işlem bloklanır
-
----
-
-## Monorepo Yapısı
-
-```
-apps/
-├── server/       # Fastify API — transaction analiz motoru
-├── showcase/     # 5 sahte site — kullanıcı perspektifli demo
-├── web/          # React/Vite frontend (DeltaG UI)
-└── dashboard/    # Next.js yönetim paneli
-packages/
-├── wallet-adapter/    # Wallet entegrasyon paketi
-└── browser-extension/ # Tarayıcı eklentisi
-```
+| Package | What it is |
+|---|---|
+| `apps/extension` | Chrome MV3 + Firefox MV3 extension. Popup, Options page, background service worker, Wallet Standard implementation, x402 fetch interceptor. |
+| `apps/server`    | Fastify analyze server. `POST /v1/analyze` returns a structured risk verdict; `GET /demo/scrybe` is the merchant side of the x402 demo, backed by [PayAI's](https://facilitator.payai.network) public devnet facilitator. |
+| `apps/showcase`  | Five demo dApps + a Scrybe x402 paywall site + an `/install` page that downloads the extension build with browser-aware install steps. |
+| `apps/wallet`    | Optional standalone web wallet (Vite SPA) — not required for the extension flow. |
+| `packages/swig-guard`     | Policy DSL + analyzer. Pre-sign rules, x402 rules, allowance rules, behavioral alerts. |
+| `packages/ext-protocol`   | Type-safe message envelope shared by every extension surface. |
+| `packages/blackthorn-adapter` | Wallet Standard adapter the showcase consumes. |
+| `packages/ui`             | Design tokens (`tokens.css`) — single source of truth for the monochrome white-on-black palette. |
 
 ---
 
-## Showcase — Canlı Demo
+## Quick start (≈ 5 minutes)
 
-`apps/showcase` — 5 bağımsız "sahte site", her biri gerçek bir Solana senaryosunu canlandırıyor. Swig Wallet entegrasyonu ile extension olmadan bağlan, işlem yap, BLACKTHORN'un tehdidi nasıl yakaladığını gör.
+### Requirements
+- Node.js ≥ 20
+- [pnpm](https://pnpm.io) (`corepack enable` works)
+- Chrome / Brave / Edge / Firefox (≥ 128) — the extension targets MV3
 
-| Site | Senaryo | BLACKTHORN Tespiti |
-|------|---------|---------------------|
-| **SolSwap** | Token swap | Fund drain · Unknown program |
-| **PixelDrop** | NFT mint | Wallet drainer · Token authority theft |
-| **SolYield** | Liquid staking | Unverified pool · No unstake path |
-| **ClaimHub** | Airdrop claim | Phishing · Unlimited token approval |
-| **LaunchPad** | Token launch | Rug pull · Mint authority · No LP lock |
+### 1. Install deps
 
 ```bash
-pnpm dev:showcase   # → http://localhost:5174
-```
-
-Her site: kendi renk/logo kimliği, Swig Wallet bağlantısı, "danger mode" toggle'ı, Blackthorn analiz overlay'i.
-
----
-
-## Hızlı Başlangıç
-
-```bash
-git clone https://github.com/Aeztrest/BLACKTHORN.git
-cd BLACKTHORN
 pnpm install
-cp apps/server/.env.example apps/server/.env
-# .env içinde RPC_* ve DELTAG_API_KEYS ayarla
-
-pnpm dev            # API → :8080
-pnpm dev:showcase   # Showcase → :5174
-pnpm dev:web        # DeltaG UI → :5173
 ```
 
----
+### 2. Bootstrap the x402 merchant (one-time)
 
-## Docker
+Generates a devnet merchant keypair, requests an airdrop, creates the
+merchant's USDC ATA, persists everything to `apps/server/.env`. Idempotent —
+re-running is safe.
 
 ```bash
-docker compose up --build -d
+pnpm --filter @deltag/server x402-setup
 ```
 
-| Servis | Port |
-|--------|------|
-| API | 18080 |
-| Web UI | 5173 |
+If devnet airdrop is rate-limited, the script prints the merchant address;
+send ~0.05 devnet SOL there from any wallet, then rerun.
 
----
+### 3. Start the server
 
-## API
-
-```
-POST /v1/analyze
-{
-  "cluster": "mainnet-beta" | "devnet" | "testnet",
-  "transactionBase64": "<base64 VersionedTransaction>",
-  "policy": { ... },       // opsiyonel
-  "userWallet": "<pubkey>" // opsiyonel
-}
+```bash
+pnpm dev:server
 ```
 
-Yanıt: `safe`, `reasons`, `riskFindings`, `estimatedChanges`, `simulationWarnings`
+Listens on `http://localhost:8080`. Logs `x402 demo paywall live` when ready.
 
-Tam şema: [apps/server/openapi.yaml](apps/server/openapi.yaml)
+### 4. Start the showcase
 
----
+In another terminal:
 
-## Komutlar
+```bash
+pnpm dev:showcase
+```
 
-| Komut | Açıklama |
-|-------|----------|
-| `pnpm dev` | API sunucusu |
-| `pnpm dev:showcase` | Showcase demo sitesi |
-| `pnpm dev:web` | DeltaG UI |
-| `pnpm dev:dashboard` | Dashboard |
-| `pnpm dev:all` | API + Web + Dashboard paralel |
-| `pnpm build` | API production build |
-| `pnpm build:showcase` | Showcase production build |
-| `pnpm test` | Sunucu unit testleri |
-| `pnpm docker:up` | Docker stack |
+Open <http://localhost:5174>. Five demo dApps + Scrybe x402 paywall.
 
----
+### 5. Install the extension
 
-## Ortam Değişkenleri
+Either:
 
-Örnek ve açıklamalar: [apps/server/.env.example](apps/server/.env.example)
+- Visit <http://localhost:5174/install> — auto-detects your browser, gives
+  you a one-click download of the zipped build + the right "load unpacked"
+  steps, OR
+- Build manually:
 
-Kritikler: `RPC_MAINNET_BETA`, `DELTAG_API_KEYS`, `X402_ENABLED`, `X402_PAY_TO`
+  ```bash
+  pnpm build:extension
+  ```
 
----
+  Then load `apps/extension/dist/` as an unpacked extension (Chrome) or
+  load `apps/extension/dist-firefox/manifest.json` as a Temporary Add-on
+  (Firefox).
 
-## x402 Entegrasyonu
+After install:
 
-`POST /v1/analyze` isteğe bağlı olarak x402 payment wall ile korunabilir. PayAI facilitator (`https://facilitator.payai.network`) üzerinden per-request SOL ödemesi.
-
-`X402_ENABLED=true` + `X402_PAY_TO=<solana_adresi>` ile aktif edilir.
-
----
-
-## Simülasyon Sınırları
-
-Bkz. [LIMITATIONS.md](LIMITATIONS.md) — simülasyon gerçek yürütmeyi garanti etmez.
+1. Click the BLACKTHORN icon → create wallet, save the mnemonic.
+2. From the popup, use **Airdrop** to fund the authority on devnet, or
+   grab USDC from <https://faucet.circle.com> (Solana / devnet) to test
+   the x402 flow.
+3. Visit any showcase site → **Connect Wallet** → pick BLACKTHORN → trigger
+   a swap / mint / paywall payment. The popup shows pre-sign analysis;
+   the **Options → Sites** page tracks every origin you've touched;
+   **Options → Policies** is the live policy editor.
 
 ---
 
-## Lisans
+## Architecture
 
-MIT — [LICENSE](LICENSE)
+```
+┌─────────────────────────────────────────────────────────┐
+│ 1. PRE-SIGN GUARD                                       │
+│    Pre-sign simulation + 25+ risk detectors,            │
+│    rendered to the user as plain-language verdicts.     │
+├─────────────────────────────────────────────────────────┤
+│ 2. STATEFUL ALLOWANCE LEDGER                            │
+│    Per-merchant Swig sub-keys with rolling caps,        │
+│    on-chain revoke, drift alerts.                       │
+├─────────────────────────────────────────────────────────┤
+│ 3. x402 FIREWALL                                        │
+│    HTTP-402 interceptor + policy gate: per-tx cap,      │
+│    hourly/daily caps, anomaly check, facilitator        │
+│    allowlist, memo enforcement. No other wallet         │
+│    protects this layer today.                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+Full design notes live in [`docs/`](./docs) and
+[`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+---
+
+## Useful commands
+
+```bash
+pnpm dev:server          # Fastify server on :8080
+pnpm dev:showcase        # showcase + /install on :5174
+pnpm dev:extension       # vite-plugin-crxjs HMR (rare — usually just build)
+pnpm build:extension     # Chrome dist + Firefox dist + zip them for /install
+pnpm typecheck           # tsc across every workspace
+pnpm test                # vitest in @deltag/server
+pnpm --filter @deltag/server x402-setup   # rerun merchant bootstrap
+```
+
+---
+
+## Status
+
+Hackathon-stage. Devnet only.
+The extension is unpacked / temporary-add-on install today — not yet on the
+Chrome Web Store or AMO.
+
+Known limits and follow-on work in [`LIMITATIONS.md`](./LIMITATIONS.md).
+
+---
+
+## License
+
+MIT — see [`LICENSE`](./LICENSE).

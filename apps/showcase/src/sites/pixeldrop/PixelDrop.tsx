@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { WalletAdapterError } from "@blackthorn/wallet-adapter";
 import { useWallet } from "../../wallet/context";
 import { SiteShell } from "../../components/SiteShell";
-import { AnalysisOverlay } from "../../blackthorn/AnalysisOverlay";
-import { analyzeScenario } from "../../blackthorn/client";
-import type { AnalysisResult } from "../../blackthorn/types";
+import { ResultOverlay, type ResultState } from "../../blackthorn/ResultOverlay";
+import { buildScenarioRequest } from "../../blackthorn/transactions";
 
 const THEME = {
   primary: "#ec4899",
@@ -28,19 +28,28 @@ const NFT_COLLECTION = {
 };
 
 export default function PixelDrop() {
-  const { connected, connect } = useWallet();
+  const { connected, openWalletModal, walletAddress, adapter } = useWallet();
   const [qty, setQty] = useState(1);
   const [dangerous, setDangerous] = useState(false);
-  const [overlayState, setOverlayState] = useState<"idle" | "analyzing" | "result">("idle");
-  const [result, setResult] = useState<AnalysisResult>();
-  const [success, setSuccess] = useState(false);
+  const [resultState, setResultState] = useState<ResultState>("idle");
+  const [signature, setSignature] = useState<string | null>(null);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
+  const success = signature !== null;
 
   async function handleMint() {
-    if (!connected) { connect(); return; }
-    setOverlayState("analyzing");
-    const res = await analyzeScenario(dangerous ? "pixeldrop-danger" : "pixeldrop-safe");
-    setResult(res);
-    setOverlayState("result");
+    if (!connected || !walletAddress) { openWalletModal(); return; }
+    setResultState("awaiting"); setSignature(null); setResultMessage(null);
+    try {
+      const tx = await buildScenarioRequest(dangerous ? "pixeldrop-danger" : "pixeldrop-safe", walletAddress);
+      const { signature: sig } = await adapter.signAndSendTransaction(tx);
+      setSignature(sig); setResultState("confirmed");
+    } catch (e) {
+      if (e instanceof WalletAdapterError && (e.code === "SIGN_REJECTED" || e.code === "POPUP_CLOSED")) {
+        setResultState("blocked"); setResultMessage(e.message);
+      } else {
+        setResultState("error"); setResultMessage(e instanceof Error ? e.message : String(e));
+      }
+    }
   }
 
   const pct = (NFT_COLLECTION.minted / NFT_COLLECTION.supply) * 100;
@@ -50,11 +59,11 @@ export default function PixelDrop() {
       theme={THEME}
       navLinks={[{ label: "Mint" }, { label: "Gallery" }, { label: "Roadmap" }, { label: "Community" }]}
     >
-      <AnalysisOverlay
-        state={overlayState}
-        result={result}
-        onClose={() => setOverlayState("idle")}
-        onProceed={() => { setOverlayState("idle"); setSuccess(true); }}
+      <ResultOverlay
+        state={resultState}
+        signature={signature}
+        message={resultMessage}
+        onClose={() => setResultState("idle")}
       />
 
       {/* Background glow */}

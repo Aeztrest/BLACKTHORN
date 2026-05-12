@@ -9,6 +9,11 @@
     "preview": "vite preview --port 5174"
   },
   "dependencies": {
+    "@blackthorn/wallet-adapter": "workspace:*",
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.98.2",
+    "@wallet-standard/app": "^1.1.0",
+    "@wallet-standard/base": "^1.1.0",
     "framer-motion": "^11.15.0",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
@@ -16,6 +21,7 @@
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
@@ -23,6 +29,7 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vite-plugin-node-polyfills": "^0.22.0"
   }
 }

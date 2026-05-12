@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift, CheckCircle, Users, Clock } from "lucide-react";
+import { WalletAdapterError } from "@blackthorn/wallet-adapter";
 import { useWallet } from "../../wallet/context";
 import { SiteShell } from "../../components/SiteShell";
-import { AnalysisOverlay } from "../../blackthorn/AnalysisOverlay";
-import { analyzeScenario } from "../../blackthorn/client";
-import type { AnalysisResult } from "../../blackthorn/types";
+import { ResultOverlay, type ResultState } from "../../blackthorn/ResultOverlay";
+import { buildScenarioRequest } from "../../blackthorn/transactions";
 
 const THEME = {
   primary: "#f59e0b",
@@ -20,23 +20,41 @@ const THEME = {
 };
 
 export default function ClaimHub() {
-  const { connected, connect, shortAddress } = useWallet();
+  const { connected, openWalletModal, walletAddress, adapter, shortAddress } = useWallet();
   const [dangerous, setDangerous] = useState(false);
-  const [overlayState, setOverlayState] = useState<"idle" | "analyzing" | "result">("idle");
-  const [result, setResult] = useState<AnalysisResult>();
-  const [success, setSuccess] = useState(false);
+  const [resultState, setResultState] = useState<ResultState>("idle");
+  const [signature, setSignature] = useState<string | null>(null);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
+  const [pendingCheck, setPendingCheck] = useState(false);
+  const success = signature !== null;
 
-  async function handleCheck() {
-    if (!connected) { connect(); return; }
+  useEffect(() => {
+    if (connected && pendingCheck) {
+      setPendingCheck(false);
+      setChecked(true);
+    }
+  }, [connected, pendingCheck]);
+
+  function handleCheck() {
+    if (!connected) { setPendingCheck(true); openWalletModal(); return; }
     setChecked(true);
   }
 
   async function handleClaim() {
-    setOverlayState("analyzing");
-    const res = await analyzeScenario(dangerous ? "claimhub-danger" : "claimhub-safe");
-    setResult(res);
-    setOverlayState("result");
+    if (!walletAddress) return;
+    setResultState("awaiting"); setSignature(null); setResultMessage(null);
+    try {
+      const tx = await buildScenarioRequest(dangerous ? "claimhub-danger" : "claimhub-safe", walletAddress);
+      const { signature: sig } = await adapter.signAndSendTransaction(tx);
+      setSignature(sig); setResultState("confirmed");
+    } catch (e) {
+      if (e instanceof WalletAdapterError && (e.code === "SIGN_REJECTED" || e.code === "POPUP_CLOSED")) {
+        setResultState("blocked"); setResultMessage(e.message);
+      } else {
+        setResultState("error"); setResultMessage(e instanceof Error ? e.message : String(e));
+      }
+    }
   }
 
   return (
@@ -44,11 +62,11 @@ export default function ClaimHub() {
       theme={THEME}
       navLinks={[{ label: "Airdrops" }, { label: "History" }, { label: "Leaderboard" }]}
     >
-      <AnalysisOverlay
-        state={overlayState}
-        result={result}
-        onClose={() => setOverlayState("idle")}
-        onProceed={() => { setOverlayState("idle"); setSuccess(true); }}
+      <ResultOverlay
+        state={resultState}
+        signature={signature}
+        message={resultMessage}
+        onClose={() => setResultState("idle")}
       />
 
       <div className="fixed inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(245,158,11,0.07) 0%, transparent 60%)" }} />

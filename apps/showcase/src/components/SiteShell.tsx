@@ -1,10 +1,15 @@
-import { type ReactNode, useState, useCallback } from "react";
+/**
+ * SiteShell — common chrome (nav + content slot + Blackthorn badge) shared
+ * by every showcase dApp site. Sits inside the global WalletProvider in
+ * App.tsx, so `useWallet()` is always available and the picker modal lives
+ * in one place.
+ */
+
+import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ChevronDown } from "lucide-react";
-import { WalletContext, type WalletState } from "../wallet/context";
-import { WalletModal } from "../wallet/WalletModal";
-import { BlackthornBadge } from "./BlackthornBadge";
+import { ArrowLeft, ChevronDown, ShieldCheck } from "lucide-react";
 import { useWallet } from "../wallet/context";
+import { BlackthornBadge } from "./BlackthornBadge";
 
 interface SiteTheme {
   primary: string;
@@ -21,7 +26,7 @@ interface Props {
 }
 
 function NavBar({ theme, navLinks }: { theme: SiteTheme; navLinks?: Props["navLinks"] }) {
-  const { connected, shortAddress, connect, disconnect, connecting } = useWallet();
+  const { connected, shortAddress, disconnect, connecting, openWalletModal } = useWallet();
 
   return (
     <nav
@@ -51,18 +56,19 @@ function NavBar({ theme, navLinks }: { theme: SiteTheme; navLinks?: Props["navLi
         {connected ? (
           <button onClick={disconnect} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium glass hover:bg-white/8 transition-all">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <ShieldCheck size={11} className="text-emerald-400/80" />
             <span className="font-mono text-xs text-white/70">{shortAddress}</span>
             <ChevronDown size={12} className="text-white/30" />
           </button>
         ) : (
           <button
-            onClick={connect}
+            onClick={openWalletModal}
             disabled={connecting}
             className="btn-primary flex items-center gap-2"
             style={{ background: theme.primary }}
           >
             {connecting ? (
-              <><div className="w-3 h-3 rounded-full border border-white/30 border-t-white animate-spin" />Connecting...</>
+              <><div className="w-3 h-3 rounded-full border border-white/30 border-t-white animate-spin" />Connecting…</>
             ) : "Connect Wallet"}
           </button>
         )}
@@ -71,54 +77,19 @@ function NavBar({ theme, navLinks }: { theme: SiteTheme; navLinks?: Props["navLi
   );
 }
 
-function randomAddress(): string {
-  const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  return Array.from({ length: 44 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-}
-function shorten(addr: string) { return `${addr.slice(0, 4)}...${addr.slice(-4)}`; }
-
 export function SiteShell({ theme, children, navLinks }: Props) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [address, setAddress] = useState<string | null>(null);
-  const [connecting, setConnecting] = useState(false);
-
-  const connect = useCallback(() => setModalOpen(true), []);
-  const disconnect = useCallback(() => setAddress(null), []);
-
-  const handleConfirm = useCallback(async () => {
-    setModalOpen(false);
-    setConnecting(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setAddress(randomAddress());
-    setConnecting(false);
-  }, []);
-
-  const walletState: WalletState = {
-    connected: !!address,
-    address,
-    shortAddress: address ? shorten(address) : null,
-    connecting,
-    connect,
-    disconnect,
-  };
-
   return (
     <div
       className="min-h-screen"
       style={{ "--site-primary": theme.primary, "--site-accent": theme.accent ?? theme.primary, "--site-bg": theme.bg, background: theme.bg } as React.CSSProperties}
     >
-      <WalletContext.Provider value={walletState}>
-        <WalletModal open={modalOpen} onClose={() => setModalOpen(false)} onConfirm={handleConfirm} />
-
-        <Link to="/" className="fixed top-4 left-4 z-50 flex items-center gap-1.5 text-xs text-white/20 hover:text-white/50 transition-colors">
-          <ArrowLeft size={12} />
-          Showcase
-        </Link>
-
-        <NavBar theme={theme} navLinks={navLinks} />
-        <main className="pt-20">{children}</main>
-        <BlackthornBadge />
-      </WalletContext.Provider>
+      <Link to="/" className="fixed top-4 left-4 z-50 flex items-center gap-1.5 text-xs text-white/20 hover:text-white/50 transition-colors">
+        <ArrowLeft size={12} />
+        Showcase
+      </Link>
+      <NavBar theme={theme} navLinks={navLinks} />
+      <main className="pt-20">{children}</main>
+      <BlackthornBadge />
     </div>
   );
 }

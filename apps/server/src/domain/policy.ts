@@ -14,9 +14,28 @@ export const policySchema = z.object({
   allowWarnings: z.boolean().optional(),
   /** When set, simulation must succeed for safe=true */
   requireSuccessfulSimulation: z.boolean().optional(),
-});
+  // x402 server-side rules (T31)
+  requireMemo: z.boolean().optional(),
+  maxComputeUnitPriceMicroLamports: z.number().nonnegative().optional(),
+  allowedMints: z.array(z.string()).optional(),
+}).passthrough();  // Tolerate client-only rules the server doesn't enforce.
 
 export type Policy = z.infer<typeof policySchema>;
+
+export const paymentRequirementsSchema = z.object({
+  scheme: z.string(),
+  network: z.string(),
+  asset: z.string(),
+  amount: z.string(),
+  payTo: z.string(),
+  maxTimeoutSeconds: z.number(),
+  extra: z.object({
+    feePayer: z.string(),
+    memo: z.string().optional(),
+  }).passthrough(),
+});
+
+export type PaymentRequirements = z.infer<typeof paymentRequirementsSchema>;
 
 export const analyzeRequestBodySchema = z.object({
   cluster: clusterSchema,
@@ -26,6 +45,12 @@ export const analyzeRequestBodySchema = z.object({
   userWallet: z.string().optional(),
   /** Optional correlation id from integrator */
   integratorRequestId: z.string().max(256).optional(),
+  /**
+   * When the candidate transaction is an x402 payment, the merchant's
+   * PaymentRequirements may be passed alongside so the server can validate
+   * shape + amount + mint + feePayer against what the merchant published.
+   */
+  paymentRequirements: paymentRequirementsSchema.optional(),
 });
 
 export type AnalyzeRequestBody = z.infer<typeof analyzeRequestBodySchema>;

@@ -53,6 +53,16 @@ const SITES = [
     emoji: "🚀",
     gradient: "from-violet-500/20 to-purple-500/10",
   },
+  {
+    path: "/scrybe",
+    name: "Scrybe",
+    tagline: "x402 paywall · live devnet",
+    description: "Ask anything. Each answer costs $0.001 USDC, settled on-chain via PayAI.",
+    scenario: "x402 spec · auto-paid by smart wallet",
+    color: "#a78bfa",
+    emoji: "🔮",
+    gradient: "from-violet-500/20 to-fuchsia-500/10",
+  },
 ];
 
 export function Hub() {

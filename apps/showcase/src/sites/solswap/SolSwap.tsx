@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpDown, ChevronDown, Settings, Info } from "lucide-react";
+import { WalletAdapterError } from "@blackthorn/wallet-adapter";
 import { SiteShell } from "../../components/SiteShell";
-import { AnalysisOverlay } from "../../blackthorn/AnalysisOverlay";
-import { analyzeScenario } from "../../blackthorn/client";
+import { ResultOverlay, type ResultState } from "../../blackthorn/ResultOverlay";
+import { buildScenarioRequest } from "../../blackthorn/transactions";
 import { useWallet } from "../../wallet/context";
-import type { AnalysisResult } from "../../blackthorn/types";
 
 const THEME = {
   primary: "#6366f1",
@@ -27,23 +27,32 @@ const TOKENS = [
 ];
 
 export default function SolSwap() {
-  const { connected, connect } = useWallet();
+  const { connected, openWalletModal, walletAddress, adapter } = useWallet();
   const [fromToken, setFromToken] = useState(TOKENS[0]);
   const [toToken, setToToken] = useState(TOKENS[1]);
   const [amount, setAmount] = useState("0.5");
   const [dangerous, setDangerous] = useState(false);
-  const [overlayState, setOverlayState] = useState<"idle" | "analyzing" | "result">("idle");
-  const [result, setResult] = useState<AnalysisResult>();
-  const [success, setSuccess] = useState(false);
+  const [resultState, setResultState] = useState<ResultState>("idle");
+  const [signature, setSignature] = useState<string | null>(null);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
 
   const outputAmount = fromToken.price * parseFloat(amount || "0") / toToken.price;
+  const success = signature !== null;
 
   async function handleSwap() {
-    if (!connected) { connect(); return; }
-    setOverlayState("analyzing");
-    const res = await analyzeScenario(dangerous ? "solswap-danger" : "solswap-safe");
-    setResult(res);
-    setOverlayState("result");
+    if (!connected || !walletAddress) { openWalletModal(); return; }
+    setResultState("awaiting"); setSignature(null); setResultMessage(null);
+    try {
+      const tx = await buildScenarioRequest(dangerous ? "solswap-danger" : "solswap-safe", walletAddress);
+      const { signature: sig } = await adapter.signAndSendTransaction(tx);
+      setSignature(sig); setResultState("confirmed");
+    } catch (e) {
+      if (e instanceof WalletAdapterError && (e.code === "SIGN_REJECTED" || e.code === "POPUP_CLOSED")) {
+        setResultState("blocked"); setResultMessage(e.message);
+      } else {
+        setResultState("error"); setResultMessage(e instanceof Error ? e.message : String(e));
+      }
+    }
   }
 
   function flip() {
@@ -62,11 +71,11 @@ export default function SolSwap() {
         { label: "Governance" },
       ]}
     >
-      <AnalysisOverlay
-        state={overlayState}
-        result={result}
-        onClose={() => setOverlayState("idle")}
-        onProceed={() => { setOverlayState("idle"); setSuccess(true); }}
+      <ResultOverlay
+        state={resultState}
+        signature={signature}
+        message={resultMessage}
+        onClose={() => setResultState("idle")}
       />
 
       <div className="min-h-screen flex flex-col items-center pt-8 pb-24 px-4">

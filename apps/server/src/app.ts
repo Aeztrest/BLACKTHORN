@@ -11,6 +11,7 @@ import { registerMcpRoutes } from "./api/routes/mcp.js";
 import { registerBatchRoute } from "./api/routes/batch.js";
 import { registerAuditRoutes } from "./api/routes/audit.js";
 import { registerReplayRoute } from "./api/routes/replay.js";
+import { registerDemoPaywallRoute } from "./api/routes/demo-paywall.js";
 import { apiError } from "./api/errors.js";
 import { createDeltagX402 } from "./infra/x402.js";
 
@@ -92,6 +93,7 @@ export async function buildApp(config: AppConfig) {
   registerMcpRoutes(app, analyzeDeps);
   registerAuditRoutes(app);
   registerReplayRoute(app, analyzeDeps);
+  registerDemoPaywallRoute(app);
 
   return app;
 }
